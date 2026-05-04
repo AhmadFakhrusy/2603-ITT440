@@ -1,78 +1,58 @@
-# AHMAD FAKHRUSY SYAKIRIN BIN MOHD HAZLIN
+# ANALYTICS FOR YOUTUBE CREATORS
+# STUDENT'S NAME : AHMAD FAKHRUSY SYAKIRIN BIN MOHD HAZLIN
+# STUDENT'S ID : 2024642602# YOUTUBE VIDEO LINK : https://youtu.be/uExROcL1Z6c
 
-## Problem Statement
+# PROBLEM STATEMENTS
+The exponential growth of YouTube metadata poses a significant challenge for creators who need to analyze audience behavior in real-time.
+- High Latency in I/O Operations: Sequential scripts spend a majority of their execution time waiting for data to be read from large CSV files or retrieved via network requests, leading to CPU idling.
+- Computational Inefficiency: Analyzing millions of engagement records (likes, views, and affection rates) using a single-threaded approach fails to utilize the multi-core capabilities of modern computing architectures.
 
-As a YouTube analytics platform grows, it must process millions of data to provide creators with actionable insights. The technical challenges include :
+# OBJECTIVES
+- Performance Optimization: To design a Python-based analytical engine that utilizes Concurrency and Parallelism to reduce data processing time.
+- Comparative Analysis: To evaluate the execution time differences between sequential, multi-threaded, and multi-processed approaches for YouTube dataset analysis.
+- Data Aggregation: To accurately calculate audience metrics across large-scale datasets.
 
-Computational Latency :                                                                            
-Analyzing watch time and top performing videos across 50,000,000 rows can take several minutes if processed sequentially.
+# PROJECT SCOPE- Dataset: High-volume YouTube creator data stored in structured formats.
+- Implementation: Developed using Python, specifically utilizing the threading and multiprocessing libraries.
+- Functionality: The system focuses on back-end data crunching and performance benchmarking rather than front-end visualization.
 
-The Python GIL Bottleneck :                                                        
-Python’s Global Interpreter Lock prevents standard threads from performing mathematical calculations in parallel, rendering basic multi-threading ineffective for heavy data crunching.
+# IMPLEMENTATION
+- Sequential
+- Concurrent
+- Parallel
 
-Memory Exhaustion :                                                      
-Storing raw data for 50 million events can exceed 8GB of RAM, leading to system instability during the aggregation phase.
+# DIFFERENCE OF THE IMPLEMENTATION
+- SEQUENTIAL- program executes one instruction at a time.
+- CONCURRENT- program doing multiple things at once.
+- PARALLEL- simultaneous execution of multiple tasks.
 
-## Sequential Code Segment 
+# CODE STRUCTURE
+<img width="457" height="164" alt="image" src="https://github.com/user-attachments/assets/acb658a5-419f-4eda-9f2c-7ffc80a4565e" />
 
-def run_sequential(db, targets):                                                
-    print(f"[MODE] Sequential...")                                              
-    start = time.time()                                       
-    results = [analyze_channel(t, db) for t in targets]                                             
-    return results, time.time() - start                                         
+<img width="410" height="124" alt="image" src="https://github.com/user-attachments/assets/ea102271-3f04-4b6e-aa0f-1d425ec7fc35" />
 
-## Concurrent Code Segment
+# KEY FUNCTION
+- generate_youtube_data(): Simulates a massive dataset (50 million records)
+- build_analytics_db(data): Organizes the raw data into a structured format.
+- get_global_rankings(db): Iterates through the entire database to calculate the Top 10 Videos and Top 10 Channels based on total watch time.
+- analyze_channel(channel_id, db): It calculates specific metrics for a single channel, including total hours watched, total video count, and identifying the top video for that specific creator.
+- run_sequential(db, targets): Processes the analysis of target channels one by one in a linear fashion.
+- run_concurrent(db, targets): It manages concurrency by interleaving tasks, which is useful for managing overhead.
+- run_parallel(db, targets): Distribute the analysis across all available CPU cores.
 
-def run_concurrent(db, targets):                             
-    print(f"[MODE] Threading...")                                     
-    start = time.time()                                       
-    with ThreadPoolExecutor(max_workers=4) as executor:                                       
-        results = list(executor.map(lambda t: analyze_channel(t, db), targets))                                      
-    return results, time.time() - start                                
+# DATA TABLE
+<img width="678" height="165" alt="image" src="https://github.com/user-attachments/assets/190e3ac4-01b6-45e9-9d31-4300c8c8f87a" />
 
-## Parallel Code Segment
+# EXPECTED OUTPUT
+<img width="676" height="857" alt="image" src="https://github.com/user-attachments/assets/1d9c0717-e2bd-4465-afeb-627b11fba3ca" />
+<img width="677" height="163" alt="image" src="https://github.com/user-attachments/assets/39c50045-7b9b-488d-b097-f25284ea3c25" />
 
-def analyze_wrapper_parallel(channel_id):                                        
-    return analyze_channel(channel_id, _channel_db_ref)                                             
+# SUMMARY
+- Sequential vs. Concurrent: The sequential method performed slightly better than the concurrent method (0.023s vs 0.029s). This often occurs with very small tasks or datasets because the overhead of creating and managing threads exceeds the time saved by interleaving the tasks.
 
-def run_parallel(db, targets):                                   
-    print(f"[MODE] Multiprocessing...")                                        
-    start = time.time()                                      
-    # High workers for high core count CPUs                                    
-    with ProcessPoolExecutor(max_workers=multiprocessing.cpu_count(),                                  
-                             initializer=init_worker,                                         
-                             initargs=(db,)) as executor:                                  
-        results = list(executor.map(analyze_wrapper_parallel, targets))                                   
-    return results, time.time() - start
+- Parallel Performance Anomaly: The parallel execution was significantly slower, taking over 42 seconds compared to the fractional seconds of the other methods.
 
-## Analysis 
+- The "Overhead" Factor: The Parallel Processing (multiprocessing) carries a heavy "startup cost". Because multiprocessing must create entirely new instances of the Python interpreter and copy data into new memory spaces, it is inefficient for tasks that are already very fast to complete sequentially.
 
-To provide instant lookup times for creators, the system transforms raw logs into a Nested Hash Map.                                                    
-
-Primary Key : Channel ID                                                     
-Secondary Key : Video ID                                       
-Value : Accumulated Watch Time                                         
-
-The system was tested using three distinct execution paths to find the most efficient processing bridge.                                                                                     
-
-Sequential :                                                               
-Processed one channel at a time. While stable, it leaves 90% of modern CPU power idle.                                                                         
-
-Concurrent :                                                                                                    
-Ideal for tasks like downloading data, but for YouTube Analytics, it failed to provide speedup because the CPU cannot perform the math for two threads at the exact same millisecond due to the GIL.           
-
-Parallel :                                                                                                
-The most effective solution. By spawning a separate "worker" for each CPU core, the system bypasses the GIL.
-
-## Conclusion
-
-The project successfully demonstrates that for CPU-bound tasks like YouTube watch-time analytics.                
-
-Parallelism is mandatory at scale :                                                                     
-At 50 million records, multiprocessing is the only viable path to meaningful speedup, provided the system has sufficient RAM.            
-
-Threading is inefficient for math : 
-It is because the analytics involve heavy summation and sorting, threading offers negligible benefits over Sequential processing due to the GIL.                                                            
-
-Memory management is the silent killer :                                                                                     
-The most critical parts of the code are not the analytics themselves, but the data cleanup and the efficient sharing of the database reference across cores.
+- Resource Management: For this specific test case, the baseline sequential method is the most efficient choice. Parallelism would
+likely only show a positive "Speedup" if the computational workload per task was much larger, justifying the 42-second management overhead.
